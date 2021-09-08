@@ -1,0 +1,29 @@
+node{
+  stage('Code Pull from GitHub')
+  {
+      git branch:'main', url: 'https://github.com/vignesha04/ansibledemo.git'
+  }
+  
+  
+
+  stage('Code Quality Check via SonarQube') {
+
+    def scannerHome = tool 'sonarqube'; 
+    withSonarQubeEnv("sonarqube") {
+      sh "${tool("sonarqube")}/bin/sonar-scanner \
+        -Dsonar.projectKey=ansible \
+        -Dsonar.sources=. \
+        -Dsonar.css.node=. \
+        -Dsonar.host.url=http://192.168.0.160:9000\
+        -Dsonar.login=7f61dc0c476115a3eadf4aba309a98d9c5f6051c"
+    }
+  stage("Build"){
+            sh "mvn clean install"
+    }
+        
+  stage("deploy-dev"){
+           sh "mv  $workspace/target/*.war /var/lib/tomcat9/webapps/"
+           sh "cp -r $workspace/target/ansible/* /var/lib/tomcat9/webapps/ansible"
+    }
+    }  
+  }
